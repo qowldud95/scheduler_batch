@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="jiyoung.scheduling.cron.ScheduledCronTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2022-04-18T07:34:21" hostname="DESKTOP-KAA549J" time="0.052">
+  <properties/>
+  <testcase name="test()" classname="jiyoung.scheduling.cron.ScheduledCronTest" time="0.052"/>
+  <system-out><![CDATA[16:34:21.991 [Test worker] INFO jiyoung.scheduling.service.ScheduleTask - The current date (1) : 2022-04-18T16:34:21.988433500
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
