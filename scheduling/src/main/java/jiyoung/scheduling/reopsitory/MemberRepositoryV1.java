@@ -1,16 +1,12 @@
 package jiyoung.scheduling.reopsitory;
 
-import jiyoung.scheduling.domain.Member;
+import jiyoung.scheduling.dto.Member;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.JdbcUtils;
 
 import javax.sql.DataSource;
 import java.sql.*;
 import java.util.*;
-
-import static jiyoung.scheduling.connection.ConnectionConst.*;
 
 @Slf4j
 public class MemberRepositoryV1 {
@@ -126,85 +122,7 @@ public class MemberRepositoryV1 {
         log.info("get connection={}, class={}", con, con.getClass());
         return con;
     }
-    /*
-    조회 - 동적
-     */
 
-    // 0. ResultsetMetaData를 이용해서 컬럼 set 할때 동적으로 set 해주기 -> 어떤 테이블이 들어와도 컬럼을 동적으로 셋팅해주기위해 java resultset get columns name
-    // 1. 매개변수로 sql을 받아와서 동적으로 데이터를 조회하는 메서드를 만들어주기 -> 조회 메서드 중복제거
-    // 2. connection 정보를 받아와서 오버로딩 해서 default일때와 if 받아왔을때 다르게 구현하기
-    // 3.
-
-    public List<Map<String, Object>> tableInfo(String sql) throws SQLException {
-
-        List<Map<String, Object>> list = new ArrayList<>();
-
-        Connection con = null;
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
-        try {
-            con = getConnection();
-            pstmt = con.prepareStatement(sql);
-            rs = pstmt.executeQuery();
-            while (rs.next()) {
-                Map<String, Object> tableMappingInfo = new HashMap<String, Object>();
-                ResultSetMetaData rsmd = rs.getMetaData();
-
-                for (int i = 0; i < rsmd.getColumnCount(); i++) {
-                    String colName = rsmd.getColumnName(i);
-                    tableMappingInfo.put(colName, rs.getObject(colName));  //컬럼의 타입이 각각 들어오는것마다 다를수 있기 때문에 getObject형태로 가져오기
-                }
-                list.add(tableMappingInfo);
-
-            }
-        } catch (SQLException e) {
-            log.error("db error", e);
-            throw e;
-        } finally {
-            close(con, pstmt, rs);
-        }
-        return list;
-    }
-
-    public List<Map<String, Object>> tableInfo(String url, String username, String password, String sql) throws SQLException {
-
-        List<Map<String, Object>> list = new ArrayList<>();
-
-        Connection con = null;
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
-        try {
-            con = getConnection(url, username, password);
-            pstmt = con.prepareStatement(sql);
-            rs = pstmt.executeQuery();
-            while (rs.next()) {
-                Map<String, Object> tableMappingInfo = new HashMap<String, Object>();
-                ResultSetMetaData rsmd = rs.getMetaData();
-
-                for (int i = 0; i < rsmd.getColumnCount(); i++) {
-                    String colName = rsmd.getColumnName(i);
-                    tableMappingInfo.put(colName, rs.getObject(colName));  //컬럼의 타입이 각각 들어오는것마다 다를수 있기 때문에 getObject형태로 가져오기
-                }
-                list.add(tableMappingInfo);
-
-            }
-        } catch (SQLException e) {
-            log.error("db error", e);
-            throw e;
-        } finally {
-            close(con, pstmt, rs);
-        }
-        return list;
-    }
-
-    public Connection getConnection(String url, String username, String password) {
-        try {
-            Connection connection = DriverManager.getConnection(url, username, password);
-            return connection;
-        } catch (SQLException e) {
-            throw new IllegalStateException(e);
-        }
-    }
 
 
 

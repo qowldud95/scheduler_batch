@@ -1,26 +1,23 @@
 package jiyoung.scheduling.service;
 
-import jiyoung.scheduling.domain.Member;
-import jiyoung.scheduling.reopsitory.MemberRepositoryV1;
+import jiyoung.scheduling.reopsitory.TableRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 
-import javax.sql.DataSource;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
 public class ScheduleTask {
-    private final MemberRepositoryV1 memberRepository;
-    public ScheduleTask(MemberRepositoryV1 memberRepository) {
-        this.memberRepository = memberRepository;
+    private final TableRepository tableRepository;
+    public ScheduleTask(TableRepository tableRepository) {
+        this.tableRepository = tableRepository;
     }
 
-    @Scheduled(cron = "10 * * * * *")
+    @Scheduled(cron = "2 * * * * *")
     public void task1() throws SQLException {
         /*
         List<Member> member1List = memberRepository.findByMember1();
@@ -40,28 +37,54 @@ public class ScheduleTask {
         }
         */
 
-        List<Map<String, Object>> tableMapping = memberRepository.tableInfo("select * from TABLE_MAPPING");
-        List<Map<String, Object>> columnMapping = memberRepository.tableInfo("select * from COLUMN_MAPPING");
+        List<Map<String, Object>> tableMapping = tableRepository.tableData("SELECT TABLE_KEY, SOURCE_TABLENAME, TARGET_TABLENAME, SOURCE_CONN, SOURCE_ID, SOURCE_PASSWORD, TARGET_CONN, TARGET_ID, TARGET_PASSWORD FROM TABLE_MAPPING");
+        List<Map<String, Object>> columnMapping = tableRepository.tableData("SELECT TABLE_KEY, SOURCE_COLUMNNAME, TARGET_COLUMNNAME, IS_PRIMARYKEY FROM COLUMN_MAPPING");
 
         for (int i = 0; i < tableMapping.size(); i++) {
-            int tmpI = i;
-            List<Map<String, Object>> filterColumn = columnMapping.stream().filter(x -> x.get("table_key").equals(tableMapping.get(tmpI).get("table_key"))).collect(Collectors.toList());
-            List<Map<String, Object>> primaryColumn = filterColumn.stream().filter(x -> (boolean) x.get("is_primarykey")).collect(Collectors.toList());
-            List<Map<String, Object>> sourceList = connection();
-            List<Map<String, Object>> targetList = connection();
+            Map<String, Object> table = tableMapping.get(i);
+            List<Map<String, Object>> filterColumn = columnMapping.stream().filter(x -> x.get("TABLE_KEY").equals(table.get("TABLE_KEY"))).collect(Collectors.toList());
+            Map<String, Object> pkColumn = filterColumn.stream().filter(x -> (boolean) x.get("IS_PRIMARYKEY")).findFirst().get();
 
-            //target리스트에 없으면 insert
-            if(targetList.stream().filter(x -> x.get() == ).count() == 0) {
+            List<Map<String, Object>> sourceTable = tableRepository.tableData("SELECT MEMBER_ID, MEMBER_NAME, MONEY FROM " + table.get("SOURCE_TABLENAME"));
+            List<Map<String, Object>> targetTable = tableRepository.tableData("SELECT MEMBER_ID, MEMBER_NAME, MONEY FROM " + table.get("TARGET_TABLENAME"));
 
-            }
-            //target리스트에 있으면 update
-            else {
+            for (int j = 0; j < sourceTable.size(); j++) {
+                Map<String, Object> source = sourceTable.get(j);
+                log.info("source={}" , source);
+                // [{TARGET_ID=sa, SOURCE_CONN=jdbc:h2:tcp://localhost/~/test, SOURCE_ID=sa, TARGET_CONN=jdbc:h2:tcp://localhost/~/test, TARGET_TABLENAME=MEMBER2, TARGET_PASSWORD=, SOURCE_TABLENAME=MEMBER, SOURCE_PASSWORD=, TABLE_KEY=d0db7916-b6e9-401d-a97c-8236bde01157}]
+                if(targetTable.stream().filter(x -> x.get(pkColumn.get("TARGET_COLUMNNAME")) == source.get(pkColumn.get("SOURCE_COLUMNNAME"))).count() == 0){
+                    //insert
 
+                }
             }
-            for (int j = 0; j < filterColumn.size(); j++) {
-                filterColumn.get(j).get("targetColumnname") = filterColumn.get(j).get("souceColumnname");
-            }
+
         }
+
+//        for (int i = 0; i < tableMapping.size(); i++) {
+//
+//            tableMapping.get(i);
+//            String test = "";
+//            List<Map<String, Object>> columnMapping = tableRepository.tableData(null,"select * from COLUMN_MAPPING WHERE TABLE_KEY ='"+test+"' ");
+//
+//            //int tmpI = i;
+//            //List<Map<String, Object>> filterColumn = columnMapping.stream().filter(x -> x.get("table_key").equals(tableMapping.get(tmpI).get("table_key"))).collect(Collectors.toList());
+//            //List<Map<String, Object>> primaryColumn = filterColumn.stream().filter(x -> (boolean) x.get("is_primarykey")).collect(Collectors.toList());
+//
+//            List<Map<String, Object>> sourceList =
+//            List<Map<String, Object>> targetList = connection();
+//
+//            //target리스트에 없으면 insert
+//            if(targetList.stream().filter(x -> x.get() == ).count() == 0) {
+//
+//            }
+//            //target리스트에 있으면 update
+//            else {
+//
+//            }
+//            for (int j = 0; j < filterColumn.size(); j++) {
+//                filterColumn.get(j).get("targetColumnname") = filterColumn.get(j).get("souceColumnname");
+//            }
+//        }
 
 
         log.info("The upload date : " + LocalDateTime.now() );
