@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.jdbc.support.JdbcUtils;
-import org.springframework.lang.Nullable;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -21,7 +20,6 @@ public class TableRepository {
     /*
     조회 - 동적
      */
-
     // 0. ResultsetMetaData를 이용해서 컬럼 set 할때 동적으로 set 해주기 -> 어떤 테이블이 들어와도 컬럼을 동적으로 셋팅해주기위해 java resultset get columns name
     // 1. 매개변수로 sql을 받아와서 동적으로 데이터를 조회하는 메서드를 만들어주기 -> 조회 메서드 중복제거
     // 2. connection 정보를 받아와서 오버로딩 해서 default일때와 받아왔을때 다르게 구현하기

@@ -19,23 +19,6 @@ public class ScheduleTask {
 
     @Scheduled(cron = "2 * * * * *")
     public void task1() throws SQLException {
-        /*
-        List<Member> member1List = memberRepository.findByMember1();
-        List<Member> member2List = memberRepository.findByMember2();
-
-        for(Member m : member1List) {
-            String member_id = m.getMemberId();
-            String member_name = m.getMemberName();
-            int money = m.getMoney();
-
-            memberRepository.update(member_id, member_name, money);
-
-            if(member2List.stream().filter(x -> x.getMemberId().equals(member_id)).count() == 0){
-                memberRepository.insert(member_id, member_name, money);
-            }
-
-        }
-        */
 
         List<Map<String, Object>> tableMapping = tableRepository.tableData("SELECT TABLE_KEY, SOURCE_TABLENAME, TARGET_TABLENAME, SOURCE_CONN, SOURCE_ID, SOURCE_PASSWORD, TARGET_CONN, TARGET_ID, TARGET_PASSWORD FROM TABLE_MAPPING");
         List<Map<String, Object>> columnMapping = tableRepository.tableData("SELECT TABLE_KEY, SOURCE_COLUMNNAME, TARGET_COLUMNNAME, IS_PRIMARYKEY FROM COLUMN_MAPPING");
@@ -72,5 +55,23 @@ public class ScheduleTask {
                 }
             }
         }
+
+        /*
+        List<Member> member1List = memberRepository.findByMember1();
+        List<Member> member2List = memberRepository.findByMember2();
+
+        for(Member m : member1List) {
+            String member_id = m.getMemberId();
+            String member_name = m.getMemberName();
+            int money = m.getMoney();
+
+            memberRepository.update(member_id, member_name, money);
+
+            if(member2List.stream().filter(x -> x.getMemberId().equals(member_id)).count() == 0){
+                memberRepository.insert(member_id, member_name, money);
+            }
+
+        }
+        */
     }
 }

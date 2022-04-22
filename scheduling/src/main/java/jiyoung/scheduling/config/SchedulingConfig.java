@@ -11,15 +11,6 @@ import javax.sql.DataSource;
 
 @Configuration
 public class SchedulingConfig {
-//    private final DataSource dataSource;
-////
-//    public SchedulingConfig(DataSource dataSource){
-//        this.dataSource = dataSource;
-//    }
-//    @Bean
-//    MemberRepositoryV1 memberRepository(){
-//        return new MemberRepositoryV1(dataSource);
-//    }
 
     @Bean
     TableRepository tableRepository(){
