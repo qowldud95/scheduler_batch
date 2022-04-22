@@ -17,9 +17,7 @@ import java.util.Map;
 public class TableRepository {
     @Autowired
     private Environment environment;
-    /*private String baseUrl;
-    private String baseUserName;
-    private String basePassword;*/
+
     /*
     조회 - 동적
      */
@@ -46,7 +44,16 @@ public class TableRepository {
             pstmt = con.prepareStatement(sql);
             rs = pstmt.executeQuery();
 
-            dataList = tableDataList(rs);
+            while (rs.next()) {
+                Map<String, Object> tableMappingInfo = new HashMap<String, Object>();
+                ResultSetMetaData rsmd = rs.getMetaData();
+
+                for (int i = 1; i <= rsmd.getColumnCount(); i++) {
+                    String colName = rsmd.getColumnName(i);
+                    tableMappingInfo.put(colName, rs.getObject(colName));  //컬럼의 타입이 각각 들어오는것마다 다를수 있기 때문에 getObject형태로 가져오기
+                }
+                dataList.add(tableMappingInfo);
+            }
 
         } catch (SQLException e) {
             log.error("db error", e);
@@ -57,20 +64,44 @@ public class TableRepository {
         return dataList;
     }
 
-    private List<Map<String, Object>> tableDataList(ResultSet rs) throws SQLException{
-        List<Map<String, Object>> dataList = new ArrayList<>();
-
-        while (rs.next()) {
-            Map<String, Object> tableMappingInfo = new HashMap<String, Object>();
-            ResultSetMetaData rsmd = rs.getMetaData();
-
-            for (int i = 1; i <= rsmd.getColumnCount(); i++) {
-                String colName = rsmd.getColumnName(i);
-                tableMappingInfo.put(colName, rs.getObject(colName));  //컬럼의 타입이 각각 들어오는것마다 다를수 있기 때문에 getObject형태로 가져오기
-            }
-            dataList.add(tableMappingInfo);
+    public void targetDataInsert(Map<String, Object> source, String targetTableName) throws SQLException {
+        String sql = "insert into " + targetTableName + " (member_id, member_name, money) values (?,?,?)";
+        Connection con = null;
+        PreparedStatement pstmt = null;
+        try {
+            con = getConnection(null);
+            pstmt = con.prepareStatement(sql);
+            pstmt.setString(1, String.valueOf(source.get("MEMBER_ID")));
+            pstmt.setString(2, String.valueOf(source.get("MEMBER_NAME")));
+            pstmt.setInt(3, (int)source.get("MONEY"));
+            int resultSize = pstmt.executeUpdate();
+            log.info("resultSize={}", resultSize);
+        } catch (SQLException e) {
+            log.error("db error", e);
+            throw e;
+        } finally {
+            close(con, pstmt, null);
         }
-        return dataList;
+    }
+
+    public void targetDataUpdate(Map<String, Object> source, String targetTableName) throws SQLException {
+        String sql = "update " + targetTableName + " set money=?, member_name=? where member_id=?";
+        Connection con = null;
+        PreparedStatement pstmt = null;
+        try {
+            con = getConnection(null);
+            pstmt = con.prepareStatement(sql);
+            pstmt.setInt(1, (int)source.get("MONEY"));
+            pstmt.setString(2, String.valueOf(source.get("MEMBER_NAME")));
+            pstmt.setString(3, String.valueOf(source.get("MEMBER_ID")));
+            int resultSize = pstmt.executeUpdate();
+            log.info("resultSize={}", resultSize);
+        } catch (SQLException e) {
+            log.error("db error", e);
+            throw e;
+        } finally {
+            close(con, pstmt, null);
+        }
     }
 
     public Connection getConnection(ConnectionDTO connect) {
