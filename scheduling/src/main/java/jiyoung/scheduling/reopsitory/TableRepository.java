@@ -62,12 +62,12 @@ public class TableRepository {
         return dataList;
     }
 
-    public void targetDataInsert(Map<String, Object> source, String targetTableName) throws SQLException {
+    public void targetDataInsert(Map<String, Object> source, String targetTableName, List<String> targetColumnName, ConnectionDTO connection) throws SQLException {
         String sql = "insert into " + targetTableName + " (member_id, member_name, money) values (?,?,?)";
         Connection con = null;
         PreparedStatement pstmt = null;
         try {
-            con = getConnection(null);
+            con = getConnection(connection);
             pstmt = con.prepareStatement(sql);
             pstmt.setString(1, String.valueOf(source.get("MEMBER_ID")));
             pstmt.setString(2, String.valueOf(source.get("MEMBER_NAME")));
@@ -82,12 +82,22 @@ public class TableRepository {
         }
     }
 
-    public void targetDataUpdate(Map<String, Object> source, String targetTableName) throws SQLException {
-        String sql = "update " + targetTableName + " set money=?, member_name=? where member_id=?";
+    public void targetDataUpdate(Map<String, Object> source, String targetTableName, List<String> targetColumnName, ConnectionDTO connection) throws SQLException {
+
+        String setSql = "";
+        for(int i=0; i<targetColumnName.size(); i++){
+            setSql += targetColumnName.get(i) + "=?, ";
+            if(i == targetColumnName.size()-1){
+                setSql += targetColumnName.get(i) + "=?";
+            }
+        }
+        log.info("setSql={} ", setSql);
+
+        String sql = "update " + targetTableName + " set " + " money=?, member_name=? where member_id=?";
         Connection con = null;
         PreparedStatement pstmt = null;
         try {
-            con = getConnection(null);
+            con = getConnection(connection);
             pstmt = con.prepareStatement(sql);
             pstmt.setInt(1, (int)source.get("MONEY"));
             pstmt.setString(2, String.valueOf(source.get("MEMBER_NAME")));

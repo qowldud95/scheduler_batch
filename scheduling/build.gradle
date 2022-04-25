@@ -29,6 +29,10 @@ dependencies {
 	//테스트에서 lombok 사용
 	testCompileOnly 'org.projectlombok:lombok'
 	testAnnotationProcessor 'org.projectlombok:lombok'
+
+	//mysql
+	implementation 'mysql:mysql-connector-java'
+
 }
 
 tasks.named('test') {

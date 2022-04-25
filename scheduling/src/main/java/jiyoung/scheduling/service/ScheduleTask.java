@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -30,11 +31,43 @@ public class ScheduleTask {
             ConnectionDTO sourceConnect = new ConnectionDTO(String.valueOf(table.get("SOURCE_CONN")), String.valueOf(table.get("SOURCE_ID")), String.valueOf(table.get("SOURCE_PASSWORD")));
             ConnectionDTO targetConnect = new ConnectionDTO(String.valueOf(table.get("TARGET_CONN")), String.valueOf(table.get("TARGET_ID")), String.valueOf(table.get("TARGET_PASSWORD")));
 
+            log.info("targetConnect = {}", targetConnect);
+
             List<Map<String, Object>> filterColumn = columnMapping.stream().filter(x -> x.get("TABLE_KEY").equals(table.get("TABLE_KEY"))).collect(Collectors.toList());
             Map<String, Object> pkColumn = filterColumn.stream().filter(x -> (boolean) x.get("IS_PRIMARYKEY")).findFirst().get();
+            log.info("pkColumn={}",pkColumn);
 
-            List<Map<String, Object>> sourceTable = tableRepository.tableData("SELECT MEMBER_ID, MEMBER_NAME, MONEY FROM " + table.get("SOURCE_TABLENAME"), sourceConnect);
-            List<Map<String, Object>> targetTable = tableRepository.tableData("SELECT MEMBER_ID, MEMBER_NAME, MONEY FROM " + table.get("TARGET_TABLENAME"), targetConnect);
+
+
+            List<String> sourceColumnName = new ArrayList<>();
+            List<String> targetColumnName = new ArrayList<>();
+            String sourceColumns = "";
+            String targetColumns = "";
+
+            //filterColumn에서 source_columnname 과 ,target_columnname을 순서대로 꺼내서
+            for(int k = 0; k < filterColumn.size(); k++){
+                sourceColumnName.add(String.valueOf(filterColumn.get(k).get("SOURCE_COLUMNNAME")));
+                targetColumnName.add(String.valueOf(filterColumn.get(k).get("TARGET_COLUMNNAME")));
+            }
+            for(int k = 0; k < sourceColumnName.size(); k++){
+                if(sourceColumns == "" && targetColumns == ""){
+                    sourceColumns += sourceColumnName.get(k);
+                    targetColumns += targetColumnName.get(k);
+                } else {
+                    sourceColumns += ", " + sourceColumnName.get(k);
+                    targetColumns += ", " + targetColumnName.get(k);
+                }
+            }
+            log.info("sourceColumnName={}", String.valueOf(sourceColumnName));
+            log.info("sourceColumns={}", String.valueOf(sourceColumns));
+            log.info("targetColumnName={}", String.valueOf(targetColumnName));
+            log.info("targetColumns={}", String.valueOf(targetColumns));
+
+            String sourceSql = "SELECT " + sourceColumns + " FROM " + String.valueOf(table.get("SOURCE_TABLENAME"));
+            String targetSql = "SELECT " + targetColumns + " FROM " + String.valueOf(table.get("TARGET_TABLENAME"));
+
+            List<Map<String, Object>> sourceTable = tableRepository.tableData(sourceSql, sourceConnect);
+            List<Map<String, Object>> targetTable = tableRepository.tableData(targetSql, targetConnect);
 
             log.info("sourceTable = {}" , sourceTable);
             //sourceTable = [{MEMBER_NAME=baeji, MONEY=1000, MEMBER_ID=1}, {MEMBER_NAME=jiyoung, MONEY=2000, MEMBER_ID=2}, {MEMBER_NAME=baejiyoung, MONEY=3000, MEMBER_ID=3}]
@@ -48,14 +81,13 @@ public class ScheduleTask {
                 log.info("source={}" , source);
                 //{MEMBER_NAME=baeji, MONEY=1000, MEMBER_ID=1}
 
-                tableRepository.targetDataUpdate(source, targetTableName);
-
-                if(targetTable.stream().filter(x -> x.get(pkColumn.get("TARGET_COLUMNNAME")) == source.get(pkColumn.get("SOURCE_COLUMNNAME"))).count() == 0){
-                   tableRepository.targetDataInsert(source, targetTableName);
+                if(targetTable.stream().filter(x -> String.valueOf(x.get(String.valueOf(pkColumn.get("TARGET_COLUMNNAME")))).equals(String.valueOf(source.get(String.valueOf(pkColumn.get("SOURCE_COLUMNNAME")))))).count() == 0){
+                   tableRepository.targetDataInsert(source, targetTableName, targetColumnName, targetConnect);
+                } else {
+                    tableRepository.targetDataUpdate(source, targetTableName, targetColumnName, targetConnect);
                 }
             }
         }
-
         /*
         List<Member> member1List = memberRepository.findByMember1();
         List<Member> member2List = memberRepository.findByMember2();
@@ -72,6 +104,6 @@ public class ScheduleTask {
             }
 
         }
-        */
+        }*/
     }
 }
