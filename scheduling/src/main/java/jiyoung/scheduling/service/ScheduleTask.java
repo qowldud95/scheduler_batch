@@ -66,6 +66,9 @@ public class ScheduleTask {
             String sourceSql = "SELECT " + sourceColumns + " FROM " + String.valueOf(table.get("SOURCE_TABLENAME"));
             String targetSql = "SELECT " + targetColumns + " FROM " + String.valueOf(table.get("TARGET_TABLENAME"));
 
+            log.info("sourceSql :: " + sourceSql);
+            log.info("targetSql :: " + targetSql);
+
             List<Map<String, Object>> sourceTable = tableRepository.tableData(sourceSql, sourceConnect);
             List<Map<String, Object>> targetTable = tableRepository.tableData(targetSql, targetConnect);
 
@@ -81,10 +84,14 @@ public class ScheduleTask {
                 log.info("source={}" , source);
                 //{MEMBER_NAME=baeji, MONEY=1000, MEMBER_ID=1}
 
-                if(targetTable.stream().filter(x -> String.valueOf(x.get(String.valueOf(pkColumn.get("TARGET_COLUMNNAME")))).equals(String.valueOf(source.get(String.valueOf(pkColumn.get("SOURCE_COLUMNNAME")))))).count() == 0){
-                   tableRepository.targetDataInsert(source, targetTableName, targetColumnName, targetConnect);
+                log.info("=========================================================");
+
+                if(targetTable == null || targetTable.stream().filter(x -> String.valueOf(x.get(String.valueOf(pkColumn.get("TARGET_COLUMNNAME")))).equals(String.valueOf(source.get(String.valueOf(pkColumn.get("SOURCE_COLUMNNAME")))))).count() == 0){
+                   tableRepository.targetDataInsert(source, targetTableName, targetColumnName, sourceColumnName, targetConnect);
+                   log.info(targetTableName + "insert");
                 } else {
-                    tableRepository.targetDataUpdate(source, targetTableName, targetColumnName, pkColumn, targetConnect);
+                    tableRepository.targetDataUpdate(source, targetTableName, targetColumnName, sourceColumnName, pkColumn, targetConnect);
+                    log.info(targetTableName + "update");
                 }
             }
         }

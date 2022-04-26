@@ -7,10 +7,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.jdbc.support.JdbcUtils;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 public class TableRepository {
@@ -35,7 +32,6 @@ public class TableRepository {
         Connection con = null;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
-
         try {
             log.info("connect ={}", connect);
             con = getConnection(connect);
@@ -52,6 +48,7 @@ public class TableRepository {
                 }
                 dataList.add(tableMappingInfo);
             }
+            log.info("dataList :: " + dataList);
 
         } catch (SQLException e) {
             log.error("db error", e);
@@ -62,16 +59,52 @@ public class TableRepository {
         return dataList;
     }
 
-    public void targetDataInsert(Map<String, Object> source, String targetTableName, List<String> targetColumnName, ConnectionDTO connection) throws SQLException {
-        String sql = "insert into " + targetTableName + " (member_id, member_name, money) values (?,?,?)";
+    public void targetDataInsert(Map<String, Object> source, String targetTableName, List<String> targetColumnName, List<String> sourceColumnName, ConnectionDTO connection) throws SQLException {
+        log.info(String.valueOf(targetColumnName));
+
+        String setInsertColumn = "";
+        List setTargetColumnValue = new ArrayList();
+        List setSourceColumnValue = new ArrayList();
+
+        for(int i = 0; i < targetColumnName.size(); i++){
+            if( i == targetColumnName.size()-1){
+                setInsertColumn += targetColumnName.get(i);
+            } else {
+                setInsertColumn += targetColumnName.get(i) + ", ";
+            }
+        }
+        String sql = "INSERT INTO " + targetTableName + "(" + setInsertColumn + ") VALUES (?,?,?)";
         Connection con = null;
         PreparedStatement pstmt = null;
         try {
             con = getConnection(connection);
             pstmt = con.prepareStatement(sql);
-            pstmt.setString(1, String.valueOf(source.get("MEMBER_ID")));
-            pstmt.setString(2, String.valueOf(source.get("MEMBER_NAME")));
-            pstmt.setInt(3, (int)source.get("MONEY"));
+
+            for(int i=0; i<targetColumnName.size(); i++) {
+                setTargetColumnValue.add(targetColumnName.get(i));
+            }
+            for(int i=0; i<sourceColumnName.size(); i++) {
+                setSourceColumnValue.add(sourceColumnName.get(i));
+            }
+
+            for(int i = 0; i < setTargetColumnValue.size(); i++){
+                if(source.get(String.valueOf(setSourceColumnValue.get(i))) instanceof String){
+                    pstmt.setString(i+1, String.valueOf(source.get(String.valueOf(setSourceColumnValue.get(i)))));
+                } else if(source.get(String.valueOf(setSourceColumnValue.get(i))) instanceof Integer){
+                    pstmt.setInt(i+1, (int)source.get(String.valueOf(setSourceColumnValue.get(i))));
+                }
+
+                //문제점 : source에 m_name, m_id, m_money가 없기때문에 null로 인식
+
+//                if(source.get(String.valueOf(setInsertColumnValue.get(i))) instanceof String){
+//                    pstmt.setString(i+1, String.valueOf(source.get(String.valueOf(setInsertColumnValue.get(i)))));
+//                } else if(source.get(String.valueOf(setInsertColumnValue.get(i))) instanceof Integer){
+//                    pstmt.setInt(i+1, (int)source.get(String.valueOf(setInsertColumnValue.get(i))));
+//                }
+            }
+            //pstmt.setString(1, String.valueOf(source.get("MEMBER_ID")));
+            //pstmt.setString(2, String.valueOf(source.get("MEMBER_NAME")));
+            //pstmt.setInt(3, (int)source.get("MONEY"));
             int resultSize = pstmt.executeUpdate();
             log.info("resultSize={}", resultSize);
         } catch (SQLException e) {
@@ -82,34 +115,56 @@ public class TableRepository {
         }
     }
 
-    public void targetDataUpdate(Map<String, Object> source, String targetTableName, List<String> targetColumnName, Map<String, Object> pkColumn, ConnectionDTO connection) throws SQLException {
-        String setSql = "";
-        String primaryKey = "";
-
+    public void targetDataUpdate(Map<String, Object> source, String targetTableName, List<String> targetColumnName, List<String> sourceColumnName, Map<String, Object> pkColumn, ConnectionDTO connection) throws SQLException {
+        String setUpdateColumn = "";
+        List setUpdateColumnValue = new ArrayList();
+        String targetPrimaryKey = String.valueOf(pkColumn.get("TARGET_COLUMNNAME"));
+        String sourcePrimaryKey = String.valueOf(pkColumn.get("SOURCE_COLUMNNAME"));
+        String setPrimaryColumn = targetPrimaryKey + "=?";
+        log.info("source.size() :: "+source.size());
         for(int i=0; i<targetColumnName.size(); i++){
-            if((boolean)pkColumn.get("IS_PRIMARYKEY") == true){
-                primaryKey = String.valueOf(pkColumn.get("TARGET_COLUMNNAME")) + "=?";
+            if(targetColumnName.get(i).equals(targetPrimaryKey)){
                 continue;
             }
             if(i < targetColumnName.size()-1){
-                setSql += targetColumnName.get(i) + "=?, ";
+                setUpdateColumn += targetColumnName.get(i) + "=?, ";
             } else {
-                setSql += targetColumnName.get(i) + "=?";
+                setUpdateColumn += targetColumnName.get(i) + "=?";
             }
 
         }
-        log.info("setSql={} ", setSql);
-        log.info("primaryKey={}",primaryKey);
+        for(int i=0; i<sourceColumnName.size(); i++){
+            if(!sourceColumnName.get(i).equals(sourcePrimaryKey)){
+                setUpdateColumnValue.add(sourceColumnName.get(i));
+            }
+        }
+        log.info("setUpdateColumn={} ", setUpdateColumn);
+        log.info("targetPrimaryKey={}",targetPrimaryKey);
+        log.info("setUpdateColumnValue={}",setUpdateColumnValue);
 
-        String sql = "UPDATE " + targetTableName + " SET " + setSql + " WHERE " +  primaryKey;
+        String sql = "UPDATE " + targetTableName + " SET " + setUpdateColumn + " WHERE " +  setPrimaryColumn;
         Connection con = null;
         PreparedStatement pstmt = null;
         try {
             con = getConnection(connection);
             pstmt = con.prepareStatement(sql);
-            pstmt.setInt(1, (int)source.get("MONEY"));
-            pstmt.setString(2, String.valueOf(source.get("MEMBER_NAME")));
-            pstmt.setString(3, String.valueOf(source.get("MEMBER_ID")));
+            for(int i = 0; i < setUpdateColumnValue.size(); i++){
+                if(source.get(String.valueOf(setUpdateColumnValue.get(i))) instanceof String){
+                    pstmt.setString(i+1, String.valueOf(source.get(String.valueOf(setUpdateColumnValue.get(i)))));
+                } else if(source.get(String.valueOf(setUpdateColumnValue.get(i))) instanceof Integer){
+                    pstmt.setInt(i+1, (int)source.get(String.valueOf(setUpdateColumnValue.get(i))));
+                }
+            }
+            if(source.get(sourcePrimaryKey) instanceof String){
+                pstmt.setString(setUpdateColumnValue.size()+1, String.valueOf(source.get(sourcePrimaryKey)));
+            } else if(source.get(sourcePrimaryKey) instanceof Integer) {
+                pstmt.setInt(setUpdateColumnValue.size()+1, (int)source.get(sourcePrimaryKey));
+            }
+
+            //pstmt.setString(1, String.valueOf(source.get("MEMBER_NAME")));
+            //pstmt.setInt(2, (int)source.get("MONEY"));
+            //pstmt.setString(3, source.get(sourcePrimaryKey));
+
             int resultSize = pstmt.executeUpdate();
             log.info("resultSize={}", resultSize);
         } catch (SQLException e) {
