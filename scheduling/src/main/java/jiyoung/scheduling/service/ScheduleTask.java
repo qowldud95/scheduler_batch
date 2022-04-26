@@ -73,18 +73,11 @@ public class ScheduleTask {
             List<Map<String, Object>> targetTable = tableRepository.tableData(targetSql, targetConnect);
 
             log.info("sourceTable = {}" , sourceTable);
-            //sourceTable = [{MEMBER_NAME=baeji, MONEY=1000, MEMBER_ID=1}, {MEMBER_NAME=jiyoung, MONEY=2000, MEMBER_ID=2}, {MEMBER_NAME=baejiyoung, MONEY=3000, MEMBER_ID=3}]
-
             log.info("targetTable = {}", targetTable);
-            //targetTable = [{MEMBER_NAME=baejiyoung, MONEY=1000, MEMBER_ID=1}]
-
 
             for (int j = 0; j < sourceTable.size(); j++) {
                 Map<String, Object> source = sourceTable.get(j);
                 log.info("source={}" , source);
-                //{MEMBER_NAME=baeji, MONEY=1000, MEMBER_ID=1}
-
-                log.info("=========================================================");
 
                 if(targetTable == null || targetTable.stream().filter(x -> String.valueOf(x.get(String.valueOf(pkColumn.get("TARGET_COLUMNNAME")))).equals(String.valueOf(source.get(String.valueOf(pkColumn.get("SOURCE_COLUMNNAME")))))).count() == 0){
                    tableRepository.targetDataInsert(source, targetTableName, targetColumnName, sourceColumnName, targetConnect);
