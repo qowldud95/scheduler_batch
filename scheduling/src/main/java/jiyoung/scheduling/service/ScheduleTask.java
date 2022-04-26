@@ -84,7 +84,7 @@ public class ScheduleTask {
                 if(targetTable.stream().filter(x -> String.valueOf(x.get(String.valueOf(pkColumn.get("TARGET_COLUMNNAME")))).equals(String.valueOf(source.get(String.valueOf(pkColumn.get("SOURCE_COLUMNNAME")))))).count() == 0){
                    tableRepository.targetDataInsert(source, targetTableName, targetColumnName, targetConnect);
                 } else {
-                    tableRepository.targetDataUpdate(source, targetTableName, targetColumnName, targetConnect);
+                    tableRepository.targetDataUpdate(source, targetTableName, targetColumnName, pkColumn, targetConnect);
                 }
             }
         }

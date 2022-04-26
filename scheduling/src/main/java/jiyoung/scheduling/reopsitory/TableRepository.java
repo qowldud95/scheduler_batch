@@ -82,18 +82,26 @@ public class TableRepository {
         }
     }
 
-    public void targetDataUpdate(Map<String, Object> source, String targetTableName, List<String> targetColumnName, ConnectionDTO connection) throws SQLException {
-
+    public void targetDataUpdate(Map<String, Object> source, String targetTableName, List<String> targetColumnName, Map<String, Object> pkColumn, ConnectionDTO connection) throws SQLException {
         String setSql = "";
+        String primaryKey = "";
+
         for(int i=0; i<targetColumnName.size(); i++){
-            setSql += targetColumnName.get(i) + "=?, ";
-            if(i == targetColumnName.size()-1){
+            if((boolean)pkColumn.get("IS_PRIMARYKEY") == true){
+                primaryKey = String.valueOf(pkColumn.get("TARGET_COLUMNNAME")) + "=?";
+                continue;
+            }
+            if(i < targetColumnName.size()-1){
+                setSql += targetColumnName.get(i) + "=?, ";
+            } else {
                 setSql += targetColumnName.get(i) + "=?";
             }
+
         }
         log.info("setSql={} ", setSql);
+        log.info("primaryKey={}",primaryKey);
 
-        String sql = "update " + targetTableName + " set " + " money=?, member_name=? where member_id=?";
+        String sql = "UPDATE " + targetTableName + " SET " + setSql + " WHERE " +  primaryKey;
         Connection con = null;
         PreparedStatement pstmt = null;
         try {
