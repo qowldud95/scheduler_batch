@@ -126,7 +126,7 @@ public class TableRepository {
             if(targetColumnName.get(i).equals(targetPrimaryKey)){
                 continue;
             }
-            if(i < targetColumnName.size()-1){
+            if(i < targetColumnName.size()-2){
                 setUpdateColumn += targetColumnName.get(i) + "=?, ";
             } else {
                 setUpdateColumn += targetColumnName.get(i) + "=?";
