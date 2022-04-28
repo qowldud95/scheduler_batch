@@ -18,7 +18,6 @@ lombok, jdbc
 
 
 ## 💡prerequisite
-작성한 코드를 실행하기 전에 db setting을 해준다 \
 - h2 db \
 spring.datasource.url=jdbc:h2:tcp://localhost/~/test \
 spring.datasource.username=sa \
@@ -54,7 +53,7 @@ source_id varchar(100), \
 source_password varchar(200), \
 target_conn varchar(1000), \
 target_id varchar(100), \
-target_password varchar(200) \ \
+target_password varchar(200) \
 )
 
 SET @UU=random_uuid(); \
