@@ -3,11 +3,13 @@
 ## 💡 Discriotion
 동적 데이터 맵핑 프로그램 (배치) + 스케쥴링
 
-예) member1 테이블과 member2 테이블이 맵핑되어있다.\
-만약, member1 테이블의 데이터가 member2 테이블에 \
+table_mapping 테이블에 맵핑테이블 정보들이 들어있다.\
+만약, member1테이블과 member2 테이블이 맵핑되어있다고 가정.\
+member1 테이블의 데이터가 member2 테이블에 \
 존재하지 않으면 insert(등록) 시켜주고,\
 존재한다면 update (수정) 해준다 -> primary key로 비교\
-이때, 한번의 실행으로 끝나는것이 아니라 2초마다 배치가 돌도록 스케쥴을 걸어준다.
+(member1, member2 처럼 정적으로 넣어준 테이블이 아니라, table_mapping 테이블에 맵핑된 정보들은 전부 동적으로 배치처리해준다.)\
+이때, 한번의 실행으로 끝나는것이 아니라 2초마다 배치가 돌도록 동적으로 스케쥴을 걸어준다.
 
 ## 💡 Environment
 Window,
